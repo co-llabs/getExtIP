@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+
+require 'mail'
+require 'yaml'
+require 'open3'
+
+def getExtIP()
+	cmd = "dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{print $2}'"
+
+	Open3.popen3(cmd) do |_, stdout, _,_|
+		@extIP = stdout.read
+	end
+
+	@rootDir = File.expand_path('..', File.dirname(__FILE__))
+
+	case File.exist?("#{@rootDir}/config/extIP")
+	when true
+		@storedExtIP = File.read("#{@rootDir}/config/extIP")
+		compareExtIP(@storedExtIP, @extIP)
+	when false
+		createExtIPFile()
+	end
+end
+
+def createExtIPFile()
+	File.open("#{@rootDir}/config/extIP", 'w') do |f|
+		f.print(@extIP)
+	end
+
+	sendExtIP(@extIP)
+end
+
+def compareExtIP(stored,fetched)
+	if stored.eql?(fetched)
+		exit
+	else
+		File.open("#{@rootDir}/config/extIP", 'w') do |f|
+			f.print @extIP
+		end
+
+		sendExtIP(@extIP)
+	end
+end
+
+def sendExtIP(message)
+	creds  = YAML::load_file("#{@rootDir}/config/.creds.yaml")
+	date   = Time.now.strftime("%A %B %e %Y")
+
+	options = {
+		:address        => creds['address'],
+		:port           => creds['port'],
+		:domain         => creds['domain'],
+		:user_name      => creds['username'],
+		:password       => creds['password'],
+		:authentication => creds['authentication']
+	}
+
+	Mail.defaults do
+		delivery_method :smtp, options
+	end
+
+	Mail.deliver do
+		to creds['recipient']
+		from creds['sender']
+		subject "SFTP Update - #{date}"
+		body message
+	end
+end
+
+getExtIP()
+
