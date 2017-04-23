@@ -1,0 +1,10 @@
+# Rename this file to `.creds.yaml`
+---
+address: ''
+port: ''
+domain: ''
+username: ''
+password: ''
+authentication: ''
+recipient: ''
+sender: ''
