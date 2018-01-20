@@ -4,7 +4,7 @@ require 'mail'
 require 'yaml'
 require 'open3'
 
-def getExtIP()
+def get_ext_ip()
 	cmd = "dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'\"' '{print $2}'"
 
 	Open3.popen3(cmd) do |_, stdout, _,_|
@@ -22,7 +22,7 @@ def getExtIP()
 	end
 end
 
-def createExtIPFile()
+def create_ext_ip_file()
 	File.open("#{@rootDir}/config/extIP", 'w') do |f|
 		f.print(@extIP)
 	end
@@ -30,7 +30,7 @@ def createExtIPFile()
 	sendExtIP(@extIP)
 end
 
-def compareExtIP(stored,fetched)
+def compare_ext_ip(stored,fetched)
 	if stored.eql?(fetched)
 		exit
 	else
@@ -42,7 +42,7 @@ def compareExtIP(stored,fetched)
 	end
 end
 
-def sendExtIP(message)
+def send_ext_ip(message)
 	creds  = YAML::load_file("#{@rootDir}/config/.creds.yaml")
 	date   = Time.now.strftime("%A %B %e %Y")
 
@@ -67,5 +67,5 @@ def sendExtIP(message)
 	end
 end
 
-getExtIP()
+get_ext_ip()
 
